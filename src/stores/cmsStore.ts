@@ -5,52 +5,59 @@ import {
 } from "api/cms";
 import { action, observable } from "mobx";
 import BaseStore from "./BaseStore";
+import { getAllAssetByNetwork, getApy, getYtOHLCV } from "api/pendel";
 
 class CmsStore extends BaseStore {
   //@ts-ignore
   @observable public statisticData: StatisticData | null = {};
 
   @observable public systemParams = {};
-  @observable public ambStatistics = {};
-  @observable public ambRevenue = {};
-  @observable public mintMonStatistic = {} as any;
-  @observable public ambRecent = {};
-  @action public getSystemParams = async () => {
-    let response = await getSystemParams();
-    const data = response.data.response;
-    delete data["_id"];
-    delete data["createdAt"];
-    delete data["updatedAt"];
-    delete data["SETTING_ID"];
+  @observable public pendleAssets = [];
+  @observable public apy = {};
+  @observable public ytOHLCV = {};
 
-    this.systemParams = {
-      ...data,
-    };
-  };
-
-  @action public getAmbStatistic = async () => {
-    const rs = await getStatisticList();
-
-    if (rs?.data) {
-      for (const i of rs.data) {
-        delete i["_id"];
-        delete i["createdAt"];
-        delete i["__v"];
-        if (i.key === "TOTAL_AMB_REVENUE") {
-          this.ambRevenue = i.data;
-        } else {
-          if (i.key !== "BATTLE_TICKET") {
-            this.ambStatistics[i.key] = i;
-          }
-        }
-      }
+  @action public getAssets = async (network: number) => {
+    const rs = await getAllAssetByNetwork(network.toString());
+    if (rs.data) {
+      this.pendleAssets = rs.data;
     }
   };
 
-  @action public getBinemonStatistic = async () => {
-    const rs = await getBinemonStatistic();
+  @action public getApy = async (
+    network: string,
+    marketAddress: string,
+    time_frame = "hour",
+    timestamp_start = 0,
+    end_time_str = 0
+  ) => {
+    const rs = await getApy(
+      network,
+      marketAddress,
+      time_frame,
+      timestamp_start,
+      end_time_str
+    );
     if (rs.data) {
-      this.mintMonStatistic = rs.data.response
+      this.apy = rs.data;
+    }
+  };
+
+  @action public getOHLCV = async (
+    network: string,
+    marketAddress: string,
+    time_frame = "hour",
+    timestamp_start = 0,
+    end_time_str = 0
+  ) => {
+    const rs = await getYtOHLCV(
+      network,
+      marketAddress,
+      time_frame,
+      timestamp_start,
+      end_time_str
+    );
+    if (rs.data) {
+      this.ytOHLCV = rs.data;
     }
   };
 }

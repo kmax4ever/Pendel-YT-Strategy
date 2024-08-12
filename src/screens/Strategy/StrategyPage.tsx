@@ -10,91 +10,84 @@ import Flex from "components/common/Flex";
 import InputWrapper from "components/common/InputWrapper";
 import Text from "components/common/Text";
 import { observer, useLocalStore } from "mobx-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AppTheme, Colors } from "styles/theme";
 import UsersTable from "./components/BinemonTable";
+import { isAddress } from "web3-utils";
+import useDepsContainer from "hooks/useDepsContainer";
 
 interface BinemonPageProps {}
 
 const StrategyPage = (props: BinemonPageProps) => {
   const styles = useStyles(props);
+  const { cmsStore } = useDepsContainer();
+  const BASE_TYPE = "YT";
   const state = useLocalStore(() => ({
-    query: {
-      breed: 1,
-      rank: 1,
-    } as any,
-    searchTrigger: 0,
+    network: 1,
+    isUseOptionalFrom1: false,
+    isUseOptionalFrom2: false,
+    marketAddress: "",
+    ytAddress: "",
+    underlyingAmount: 0,
+    pointPerHour: 0,
+    pendelYTMultiplier: 0,
+    error: {
+      marketAddressError: "",
+      ytAddressError: "",
+    },
+    asset: null,
+    startTime: new Date("2023-01-01"),
   }));
 
+  const handleSetMarketAddress = (value: string) => {
+    state.marketAddress = value;
+    if (isAddress(value)) {
+      state.error.marketAddressError = "";
+    } else {
+      state.error.marketAddressError = "invalid address!";
+    }
+  };
+
+  const handleSetTYAddress = (value: string) => {
+    state.ytAddress = value;
+    if (isAddress(value)) {
+      state.error.ytAddressError = "";
+    } else {
+      state.error.ytAddressError = "invalid address!";
+    }
+  };
+
+  const handleGetAsset = (
+    assets = [],
+    baseType = "YT",
+    marketContract: string
+  ) => {
+    const asset = assets.filter(
+      (i: any) => i.address == marketContract || i.baseType == baseType
+    );
+    console.log(asset[0]);
+
+    return asset[0];
+  };
+
+  useEffect(() => {
+    if (state.network) {
+      cmsStore.getAssets(state.network);
+      if (
+        cmsStore.pendleAssets.length > 0 &&
+        state.ytAddress &&
+        !state.error.ytAddressError
+      ) {
+        handleGetAsset(cmsStore.pendleAssets, BASE_TYPE, state.ytAddress);
+      }
+    }
+  }, [state.network, state.ytAddress]);
+
+  const analyzer = () => {
+    console.log(state);
+  };
+
   return (
-    // <Flex className={styles.container} p={2} column>
-    //   <Flex
-    //     className={styles.block}
-    //     column
-    //     mt={5}
-    //     p={5}
-    //     height="100%"
-    //     overflow="auto"
-    //     minHeight={500}
-    //   >
-    //     <Flex mb={2} gridRow>
-    //       <Flex mx={2} column>
-    //         <Flex mx={2} gridRow>
-    //           <Text color="gray">Network:</Text>
-    //           <Select
-    //             variant="filled"
-    //             color="primary"
-    //             value={state.query.rank}
-    //             onChange={(e) => {
-    //               state.query.rank = e.target.value;
-    //             }}
-    //           >
-    //             <MenuItem value={1}>ethereum</MenuItem>
-    //             <MenuItem value={42161}>arbitrum</MenuItem>
-    //             <MenuItem value={5000}>mantle</MenuItem>
-    //           </Select>
-    //         </Flex>
-
-    //         <Text color="gray">market contract:</Text>
-    //         <InputWrapper
-    //           placeholder="TokenId"
-    //           value={state.query.tokenID || ""}
-    //           onChange={(e) => {
-    //             state.query.tokenID = e.target.value;
-    //           }}
-    //         />
-    //       </Flex>
-    //       <Flex mx={2} column></Flex>
-    //       {/*
-    //       <Flex ml={2} column justifyContent="flex-end">
-    //         <Text color="gray">Select All</Text>
-    //         <Checkbox
-    //           color="primary"
-    //           onChange={(e) => {
-    //             if (e.target.checked) {
-    //               state.query = {};
-    //             } else {
-    //               state.query = { rank: 1, breed: 1 };
-    //             }
-    //           }}
-    //           style={{ backgroundColor: "#16192a", color: "white" }}
-    //         ></Checkbox>
-    //       </Flex> */}
-    //       <Flex ml={2} column justifyContent="flex-end">
-    //         <Button
-    //           onClick={() => {
-    //             state.searchTrigger++;
-    //           }}
-    //           variant="contained"
-    //         >
-    //           VIEW
-    //         </Button>
-    //       </Flex>
-    //     </Flex>
-    //     {/* <UsersTable query={state.query} trigger={state.searchTrigger} /> */}
-    //   </Flex>
-    // </Flex>
-
     <Flex flex={1} left>
       <Flex
         column
@@ -110,10 +103,10 @@ const StrategyPage = (props: BinemonPageProps) => {
           <Text width={150}> Network:</Text>
           <Select
             color="primary"
-            value={state.query.rank}
+            value={1}
             //style={{ marginTop: -25 }}
             onChange={(e) => {
-              state.query.rank = e.target.value;
+              state.network = e.target.value;
             }}
           >
             <MenuItem value={1}>ethereum</MenuItem>
@@ -126,25 +119,28 @@ const StrategyPage = (props: BinemonPageProps) => {
           <Text width={200}> market contract: </Text>
           <InputWrapper
             column
-            value={1}
-            //error={}
-            onChange={(e: any) => {}}
+            value={state.marketAddress}
+            error={state.marketAddress && state.error.marketAddressError}
+            onChange={(e: any) => {
+              handleSetMarketAddress(e.target.value);
+            }}
             width={500}
             style={{ marginLeft: 10 }}
-            placeholder="Enter username"
+            placeholder="Enter address!"
           />
         </Flex>
         <Flex mt={3}>
           <Text width={200}> YT contract:</Text>
           <InputWrapper
             column
-            type="password"
-            value={1}
+            value={state.ytAddress}
             width={150}
-            //error={}
+            error={state.ytAddress && state.error.ytAddressError}
             style={{ marginLeft: 10 }}
-            onChange={(e: any) => {}}
-            placeholder="Enter password"
+            onChange={(e: any) => {
+              handleSetTYAddress(e.target.value);
+            }}
+            placeholder="Enter address!"
           />
         </Flex>
 
@@ -152,13 +148,16 @@ const StrategyPage = (props: BinemonPageProps) => {
           <Text width={200}> underlying_amount: </Text>
           <InputWrapper
             column
-            type="password"
+            type="text"
             value={1}
             width={150}
             //error={}
             style={{ marginLeft: 10 }}
-            onChange={(e: any) => {}}
-            placeholder="Enter password"
+            onChange={(e: any) => {
+              state.underlyingAmount = e.target.value;
+            }}
+            isNumber
+            placeholder="Enter amount"
           />
         </Flex>
 
@@ -166,13 +165,16 @@ const StrategyPage = (props: BinemonPageProps) => {
           <Text> points_per_hour_per_underlying:</Text>
           <InputWrapper
             column
-            type="password"
+            type="text"
             value={1}
             width={150}
             style={{ marginLeft: 10 }}
             //error={}
-            onChange={(e: any) => {}}
-            placeholder="Enter password"
+            onChange={(e: any) => {
+              state.pointPerHour = e.target.value;
+            }}
+            placeholder="Enter amount"
+            isNumber
           />
         </Flex>
 
@@ -180,117 +182,130 @@ const StrategyPage = (props: BinemonPageProps) => {
           <Text width={200}> pendle_yt_multiplier:</Text>
           <InputWrapper
             column
-            type="password"
+            type="text"
             value={1}
             width={150}
             style={{ marginLeft: 10 }}
             //error={}
-            onChange={(e: any) => {}}
-            placeholder="Enter password"
+            onChange={(e: any) => {
+              state.pendelYTMultiplier = e.target.value;
+            }}
+            placeholder="Enter Amount"
+            isNumber
           />
         </Flex>
 
         <Flex mt={3}>
-          <Text width={200}>Optional Form #1</Text>
+          <Text variant="dialogHeader" width={200}>
+            Optional Form #1
+          </Text>
           <Checkbox
             color="primary"
             onChange={(e) => {
               if (e.target.checked) {
-                state.query = {};
+                state.isUseOptionalFrom1 = true;
               } else {
-                state.query = { rank: 1, breed: 1 };
+                state.isUseOptionalFrom1 = false;
               }
             }}
             style={{ backgroundColor: "none", color: "white" }}
           ></Checkbox>
         </Flex>
         {/* ----- Optional Form #1 ------  */}
+        {state.isUseOptionalFrom1 ? (
+          <>
+            {" "}
+            <Flex mt={3}>
+              <Text> yt_purchase_time:</Text>
+              <InputWrapper
+                column
+                type="password"
+                value={1}
+                width={160}
+                style={{ marginLeft: 10 }}
+                //error={}
+
+                onChange={(e: any) => {}}
+                placeholder="Enter password"
+              />
+            </Flex>
+            <Flex mt={3}>
+              <Text width={200}> underlying_invest_amount:</Text>
+              <InputWrapper
+                column
+                type="password"
+                value={1}
+                width={150}
+                style={{ marginLeft: 10 }}
+                //error={}
+                onChange={(e: any) => {}}
+                placeholder="Enter password"
+              />
+            </Flex>
+          </>
+        ) : null}
 
         <Flex mt={3}>
-          <Text> yt_purchase_time:</Text>
-          <InputWrapper
-            column
-            type="password"
-            value={1}
-            width={150}
-            style={{ marginLeft: 10 }}
-            //error={}
-
-            onChange={(e: any) => {}}
-            placeholder="Enter password"
-          />
-        </Flex>
-
-        <Flex mt={3}>
-          <Text width={200}> underlying_invest_amount:</Text>
-          <InputWrapper
-            column
-            type="password"
-            value={1}
-            width={150}
-            style={{ marginLeft: 10 }}
-            //error={}
-            onChange={(e: any) => {}}
-            placeholder="Enter password"
-          />
-        </Flex>
-
-        <Flex mt={3}>
-          <Text width={200}>Optional Form #2</Text>
+          <Text variant="dialogHeader" width={200}>
+            Optional Form #2
+          </Text>
           <Checkbox
             color="primary"
             onChange={(e) => {
               if (e.target.checked) {
-                state.query = {};
+                state.isUseOptionalFrom2 = true;
               } else {
-                state.query = { rank: 1, breed: 1 };
+                state.isUseOptionalFrom2 = false;
               }
             }}
             style={{ backgroundColor: "none", color: "white" }}
           ></Checkbox>
         </Flex>
         {/* ----- Optional Form #2 ------  */}
-
-        <Flex mt={3}>
-          <Text> limmit_order_yt_estimated_purchase_time :</Text>
-          <InputWrapper
-            column
-            type="password"
-            value={1}
-            width={150}
-            //error={}
-            style={{ marginLeft: 10 }}
-            onChange={(e: any) => {}}
-            placeholder="Enter password"
-          />
-        </Flex>
-
-        <Flex mt={3}>
-          <Text width={200}> limmit_order_implied_apy_0_to_1:</Text>
-          <InputWrapper
-            column
-            type="password"
-            value={1}
-            width={150}
-            //error={}
-            style={{ marginLeft: 10 }}
-            onChange={(e: any) => {}}
-            placeholder="Enter password"
-          />
-        </Flex>
-        <Flex mt={3}>
-          <Text width={200}> limmit_order_underlying_invest_amount:</Text>
-          <InputWrapper
-            column
-            type="password"
-            value={1}
-            width={150}
-            //error={}
-            style={{ marginLeft: 10 }}
-            onChange={(e: any) => {}}
-            placeholder="Enter password"
-          />
-        </Flex>
+        {state.isUseOptionalFrom2 ? (
+          <>
+            {" "}
+            <Flex mt={3}>
+              <Text> limmit_order_yt_estimated_purchase_time:</Text>
+              <InputWrapper
+                column
+                type="password"
+                value={1}
+                width={150}
+                //error={}
+                style={{ marginLeft: 10 }}
+                onChange={(e: any) => {}}
+                placeholder="Enter password"
+              />
+            </Flex>
+            <Flex mt={3}>
+              <Text width={200}> limmit_order_implied_apy_0_to_1:</Text>
+              <InputWrapper
+                column
+                type="password"
+                value={1}
+                width={150}
+                //error={}
+                style={{ marginLeft: 10 }}
+                onChange={(e: any) => {}}
+                placeholder="Enter password"
+              />
+            </Flex>
+            <Flex mt={3}>
+              <Text width={200}> limmit_order_underlying_invest_amount:</Text>
+              <InputWrapper
+                column
+                type="password"
+                value={1}
+                width={150}
+                //error={}
+                style={{ marginLeft: 10 }}
+                onChange={(e: any) => {}}
+                placeholder="Enter password"
+              />
+            </Flex>
+          </>
+        ) : null}
 
         {
           <Flex mt={3}>
@@ -313,7 +328,9 @@ const StrategyPage = (props: BinemonPageProps) => {
           <Flex flex={1} height="100%" column center>
             <Button
               fullWidth
-              onClick={() => {}}
+              onClick={() => {
+                analyzer();
+              }}
               variant="contained"
               color="secondary"
               style={{ padding: "10px 0", height: "auto", flex: 1 }}

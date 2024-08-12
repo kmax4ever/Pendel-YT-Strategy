@@ -52,7 +52,10 @@ export const getListBinemon = async (params: {
   limit?: number;
   walletAddress?: string;
 }) => {
-return await HttpClientGameBE.get(`/api/binemons`, {...params,isEgg:false});
+  return await HttpClientGameBE.get(`/api/binemons`, {
+    ...params,
+    isEgg: false,
+  });
 };
 
 export const getListUser = async (params: {
@@ -107,11 +110,12 @@ export const getStatisticList = async () => {
   return await HttpClientBlockchainBE.get(`/api/statistic/cms_statistic`, {});
 };
 
-
 export const getBinemonStatistic = async () => {
   return await HttpClientBlockchainBE.get(`/api/binemons/statistic`, {});
 };
 export const getMintSpecialEggHistory = async (params) => {
-  
-  return await HttpClientBlockchainBE.get(`/api/statistic/mint_special_egg_history`, {...params});
+  return await HttpClientBlockchainBE.get(
+    `/api/statistic/mint_special_egg_history`,
+    { ...params }
+  );
 };
