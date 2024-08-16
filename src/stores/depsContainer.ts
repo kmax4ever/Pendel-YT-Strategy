@@ -1,14 +1,14 @@
 import UIStore from "stores/UIStore";
-import CmsStore from "./cmsStore";
+import PendleStore from "./pendleStore";
 
 class DepsContainer {
   public uiStore: UIStore;
-  public cmsStore: CmsStore;
+  public pendleStore: PendleStore;
 
   public constructor() {
     // Stores
     this.uiStore = new UIStore(this);
-    this.cmsStore = new CmsStore(this);
+    this.pendleStore = new PendleStore(this);
   }
 }
 

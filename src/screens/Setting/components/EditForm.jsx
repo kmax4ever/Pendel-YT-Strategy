@@ -14,7 +14,7 @@ import { setSystemParams } from "api/cms";
 import useDepsContainer from "hooks/useDepsContainer";
 
 export default function EditForm(props: any) {
-  const { cmsStore } = useDepsContainer();
+  const { pendelStore: cmsStore } = useDepsContainer();
   const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState(0);
 

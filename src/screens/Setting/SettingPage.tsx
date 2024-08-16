@@ -17,7 +17,7 @@ const SystemParamPage = (props: SystemParamPageProps) => {
     initValue: 0,
     isString: false,
   }));
-  const { cmsStore } = useDepsContainer();
+  const { pendelStore: cmsStore } = useDepsContainer();
   const { systemParams } = cmsStore;
 
   useEffect(() => {
