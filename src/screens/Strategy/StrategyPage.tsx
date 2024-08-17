@@ -19,7 +19,6 @@ import Plot from "react-plotly.js";
 var DateTime = require("datetime-js");
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { title } from "process";
 
 interface BinemonPageProps {}
 
@@ -550,196 +549,199 @@ const StrategyPage = (props: BinemonPageProps) => {
           </Flex>
         </Flex>
       </Flex>
-      {state.chart1Loading ? (
-        <Plot
-          data={[
-            {
-              x: state.datas.map((i) => i.Time),
-              y: pendleStore.apy.map((i: any) => i.ytUnderlying),
-              mode: "lines",
-              name: "YT price",
-            },
 
-            {
-              x: state.datas.map((i) => i.Time),
-              y: bfill(
-                movingAverage(
-                  state.datas.map((i) => i.impliedApy),
-                  state.config.volatility_window
-                )
-              ),
-              mode: "lines",
-              name: "Volatility",
-              yaxis: "y2",
-            },
-            {
-              x: state.datas.map((i) => i.Time),
-              y: bfill(
-                movingAverage(
-                  state.datas.map((i) => i.ytUnderlying),
-                  state.config.ma1
-                )
-              ),
-              mode: "lines",
-              name: "20-day MA",
-            },
-            {
-              x: state.datas.map((i) => i.Time),
-              y: bfill(
-                movingAverage(
-                  state.datas.map((i) => i.ytUnderlying),
-                  state.config.ma2
-                )
-              ),
-              mode: "lines",
-              name: "50-day MA",
-            },
-
-            {
-              x: state.datas.map((i) => i.Time),
-              y: bfill(
-                movingAverage(
-                  state.datas.map((i) => i.ytUnderlying),
-                  state.config.ma3
-                )
-              ),
-              mode: "lines",
-              marker: { color: "#e4aa7d" },
-              name: "200-day MA",
-            },
-            true
-              ? {
-                  x: state.datas.map((i) => i.Time),
-                  y: state.MACD,
-                  mode: "lines",
-                  name: "MACD",
-                  yaxis: "y4",
-                }
-              : null,
-            true
-              ? {
-                  x: state.datas.map((i) => i.Time),
-                  y: state.SignalLine,
-                  mode: "lines",
-                  name: "SignalLine",
-                  yaxis: "y4",
-                }
-              : null,
-
-            {
-              mode: `lines`,
-              x: [
-                new Date(state.ytPurchaseTime).toUTCString(),
-                new Date(state.ytPurchaseTime).toUTCString(),
-              ],
-              y: [0.1, 0.25],
-              line: {
-                color: "green",
-                width: 3,
-                dash: "dashdot",
-              },
-              name: "YT Purchase time",
-              text: "YT Purchase time",
-            },
-          ]}
-          layout={{
-            width: 1500,
-            height: 1000,
-            title: `${state.symbol} on ${state.network} YT/Underlying Asset`,
-            XAxis: { title: "Time" },
-            YAxis: { title: "YT Price (per Underlying)" },
-            yaxis2: { overlaying: "y", position: 0.85, side: "right" },
-            yaxis4: { overlaying: "y", position: 0.95, side: "right" },
-          }}
-        />
+      {!state.chart1Loading ? (
+        <Skeleton count={10} />
       ) : (
-        <Skeleton />
+        <>
+          <Plot
+            data={[
+              {
+                x: state.datas.map((i) => i.Time),
+                y: pendleStore.apy.map((i: any) => i.ytUnderlying),
+                mode: "lines",
+                name: "YT price",
+              },
+
+              {
+                x: state.datas.map((i) => i.Time),
+                y: bfill(
+                  movingAverage(
+                    state.datas.map((i) => i.impliedApy),
+                    state.config.volatility_window
+                  )
+                ),
+                mode: "lines",
+                name: "Volatility",
+                yaxis: "y2",
+              },
+              {
+                x: state.datas.map((i) => i.Time),
+                y: bfill(
+                  movingAverage(
+                    state.datas.map((i) => i.ytUnderlying),
+                    state.config.ma1
+                  )
+                ),
+                mode: "lines",
+                name: "20-day MA",
+              },
+              {
+                x: state.datas.map((i) => i.Time),
+                y: bfill(
+                  movingAverage(
+                    state.datas.map((i) => i.ytUnderlying),
+                    state.config.ma2
+                  )
+                ),
+                mode: "lines",
+                name: "50-day MA",
+              },
+
+              {
+                x: state.datas.map((i) => i.Time),
+                y: bfill(
+                  movingAverage(
+                    state.datas.map((i) => i.ytUnderlying),
+                    state.config.ma3
+                  )
+                ),
+                mode: "lines",
+                marker: { color: "#e4aa7d" },
+                name: "200-day MA",
+              },
+              true
+                ? {
+                    x: state.datas.map((i) => i.Time),
+                    y: state.MACD,
+                    mode: "lines",
+                    name: "MACD",
+                    yaxis: "y4",
+                  }
+                : null,
+              true
+                ? {
+                    x: state.datas.map((i) => i.Time),
+                    y: state.SignalLine,
+                    mode: "lines",
+                    name: "SignalLine",
+                    yaxis: "y4",
+                  }
+                : null,
+
+              {
+                mode: `lines`,
+                x: [
+                  new Date(state.ytPurchaseTime).toUTCString(),
+                  new Date(state.ytPurchaseTime).toUTCString(),
+                ],
+                y: [0.1, 0.25],
+                line: {
+                  color: "green",
+                  width: 3,
+                  dash: "dashdot",
+                },
+                name: "YT Purchase time",
+                text: "YT Purchase time",
+              },
+            ]}
+            layout={{
+              width: 1500,
+              height: 1000,
+              title: `${state.symbol} on ${state.network} YT/Underlying Asset`,
+              XAxis: { title: "Time" },
+              YAxis: { title: "YT Price (per Underlying)" },
+              yaxis2: { overlaying: "y", position: 0.85, side: "right" },
+              yaxis4: { overlaying: "y", position: 0.95, side: "right" },
+            }}
+          />
+
+          <Plot
+            data={[
+              {
+                x: state.datas.map((i) => i.Time),
+                y: state.datas.map((i) => i.points),
+                mode: "lines",
+                name: "Points",
+              },
+              // {
+              //   x: new Date("2024-08-10").toUTCString(),
+              //   mode: "dash",
+              //   color: "green",
+              //   width: 3,
+              //   name: "xx",
+              //   type: "scatter",
+              //   height: 1000,
+              // },
+              {
+                mode: `lines`,
+                x: [
+                  new Date(state.ytPurchaseTime).toUTCString(),
+                  new Date(state.ytPurchaseTime).toUTCString(),
+                ],
+                y: [1500, 4000],
+                line: {
+                  color: "green",
+                  width: 3,
+                  dash: "dashdot",
+                },
+                name: "YT Purchase time",
+                text: "YT Purchase time",
+              },
+            ]}
+            layout={{
+              width: 1500,
+              height: 1000,
+              title: ` ${state.symbol} on ${state.network} <br />|Total number of points earned from ${state.underlyingAmount} underlying investment in YT at a certain time`,
+              XAxis: { title: "Time" },
+              YAxis: { title: "Points" },
+            }}
+          />
+
+          <Plot
+            data={[
+              {
+                x: state.datas.map((i) => i.Time),
+                y: state.datas.map((i) => i.longYieldApy),
+                mode: "lines",
+                name: "Long Yield APY",
+                yaxis: "y1",
+              },
+              {
+                x: state.datas.map((i) => i.Time),
+                y: state.datas.map((i) => i.impliedApy),
+                mode: "lines",
+                name: "Implied APY",
+                yaxis: "y2",
+              },
+              // {
+              //   mode: `lines`,
+              //   x: [
+              //     new Date(state.ytPurchaseTime).toUTCString(),
+              //     new Date(state.ytPurchaseTime).toUTCString(),
+              //   ],
+              //   y: [1500, 4000],
+              //   line: {
+              //     color: "green",
+              //     width: 3,
+              //     dash: "dashdot",
+              //   },
+              //   name: "YT Purchase time",
+              //   text: "YT Purchase time",
+              // },
+            ]}
+            layout={{
+              width: 1500,
+              height: 1000,
+              title: `${state.symbol} on ${state.network} <br />|Long Yield APY V.S. Implied APY`,
+              XAxis: { title: "Time" },
+              YAxis: { title: "Long Yield APY" },
+              yaxis1: { title: "Long Yield APY", side: "left" },
+              yaxis2: { title: "Implied APY", side: "right", overlaying: "y" },
+            }}
+          />
+        </>
       )}
-
-      <Plot
-        data={[
-          {
-            x: state.datas.map((i) => i.Time),
-            y: state.datas.map((i) => i.points),
-            mode: "lines",
-            name: "Points",
-          },
-          // {
-          //   x: new Date("2024-08-10").toUTCString(),
-          //   mode: "dash",
-          //   color: "green",
-          //   width: 3,
-          //   name: "xx",
-          //   type: "scatter",
-          //   height: 1000,
-          // },
-          {
-            mode: `lines`,
-            x: [
-              new Date(state.ytPurchaseTime).toUTCString(),
-              new Date(state.ytPurchaseTime).toUTCString(),
-            ],
-            y: [1500, 4000],
-            line: {
-              color: "green",
-              width: 3,
-              dash: "dashdot",
-            },
-            name: "YT Purchase time",
-            text: "YT Purchase time",
-          },
-        ]}
-        layout={{
-          width: 1500,
-          height: 1000,
-          title: ` ${state.symbol} on ${state.network} <br />|Total number of points earned from ${state.underlyingAmount} underlying investment in YT at a certain time`,
-          XAxis: { title: "Time" },
-          YAxis: { title: "Points" },
-        }}
-      />
-
-      <Plot
-        data={[
-          {
-            x: state.datas.map((i) => i.Time),
-            y: state.datas.map((i) => i.longYieldApy),
-            mode: "lines",
-            name: "Long Yield APY",
-            yaxis: "y1",
-          },
-          {
-            x: state.datas.map((i) => i.Time),
-            y: state.datas.map((i) => i.impliedApy),
-            mode: "lines",
-            name: "Implied APY",
-            yaxis: "y2",
-          },
-          // {
-          //   mode: `lines`,
-          //   x: [
-          //     new Date(state.ytPurchaseTime).toUTCString(),
-          //     new Date(state.ytPurchaseTime).toUTCString(),
-          //   ],
-          //   y: [1500, 4000],
-          //   line: {
-          //     color: "green",
-          //     width: 3,
-          //     dash: "dashdot",
-          //   },
-          //   name: "YT Purchase time",
-          //   text: "YT Purchase time",
-          // },
-        ]}
-        layout={{
-          width: 1500,
-          height: 1000,
-          title: `${state.symbol} on ${state.network} <br />|Long Yield APY V.S. Implied APY`,
-          XAxis: { title: "Time" },
-          YAxis: { title: "Long Yield APY" },
-          yaxis1: { title: "Long Yield APY", side: "left" },
-          yaxis2: { title: "Implied APY", side: "right", overlaying: "y" },
-        }}
-      />
     </div>
   );
 };
