@@ -21,6 +21,11 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
 interface BinemonPageProps {}
+const CONFIG_NETWORK = {
+  1: `Ethereum`,
+  42161: "Arbitrum",
+  5000: `Mantle`,
+};
 
 const StrategyPage = (props: BinemonPageProps) => {
   const styles = useStyles(props);
@@ -126,7 +131,7 @@ const StrategyPage = (props: BinemonPageProps) => {
 
       const ytUnderlying = impliedApy + 1 ** (hourToMaturity / 8760) - 1;
       const longYieldApy =
-        ((1 + underlyingApy - impliedApy) / impliedApy) **
+        (1 + (underlyingApy - impliedApy / impliedApy)) **
           (8760 / hourToMaturity) -
         1;
 
@@ -167,6 +172,7 @@ const StrategyPage = (props: BinemonPageProps) => {
       state.datas[i][`fair`] = fairValueCurve; // recheck
 
       const weightedPoints = (points * volume) / pendleStore.sumVolume;
+      state.datas[i].weightedPoints = weightedPoints;
       state.weightedPointsPerUnderlying += weightedPoints;
     }
 
@@ -220,6 +226,8 @@ const StrategyPage = (props: BinemonPageProps) => {
     // for (let i = 0; i < gain.length; i++) {
     //   rs.push(+gain[i] / +lost[i]);
     // }
+
+    //TODO missing fair, difference
 
     console.log(
       `poins`,
@@ -648,7 +656,9 @@ const StrategyPage = (props: BinemonPageProps) => {
             layout={{
               width: 1500,
               height: 1000,
-              title: `${state.symbol} on ${state.network} YT/Underlying Asset`,
+              title: `${state.symbol} on ${
+                CONFIG_NETWORK[state.network]
+              } YT/Underlying Asset`,
               XAxis: { title: "Time" },
               YAxis: { title: "YT Price (per Underlying)" },
               yaxis2: { overlaying: "y", position: 0.85, side: "right" },
@@ -692,9 +702,68 @@ const StrategyPage = (props: BinemonPageProps) => {
             layout={{
               width: 1500,
               height: 1000,
-              title: ` ${state.symbol} on ${state.network} <br />|Total number of points earned from ${state.underlyingAmount} underlying investment in YT at a certain time`,
+              title: ` ${state.symbol} on ${
+                CONFIG_NETWORK[state.network]
+              } <br />|Total number of points earned from ${
+                state.underlyingAmount
+              } underlying investment in YT at a certain time`,
               XAxis: { title: "Time" },
               YAxis: { title: "Points" },
+            }}
+          />
+
+          <Plot
+            data={[
+              {
+                x: state.datas.map((i) => i.Time),
+                y: state.datas.map((i) => i.ytUnderlying),
+                mode: "lines",
+                name: "YT Price",
+                yaxis: "y1",
+              },
+              {
+                x: state.datas.map((i) => i.Time),
+                y: state.datas.map((i) => i.points),
+                mode: "lines",
+                name: "Points Earned",
+                yaxis: "y2",
+              },
+              // {
+              //   x: state.datas.map((i) => i.Time),
+              //   y: state.datas.map((i) => i.difference), //TODO missing fair, difference
+              //   mode: "lines",
+              //   name: "Implied APY",
+              //   yaxis: "y2",
+              // },
+              // {
+              //   mode: `lines`,
+              //   x: [
+              //     new Date(state.ytPurchaseTime).toUTCString(),
+              //     new Date(state.ytPurchaseTime).toUTCString(),
+              //   ],
+              //   y: [1500, 4000],
+              //   line: {
+              //     color: "green",
+              //     width: 3,
+              //     dash: "dashdot",
+              //   },
+              //   name: "YT Purchase time",
+              //   text: "YT Purchase time",
+              // },
+            ]}
+            layout={{
+              width: 1500,
+              height: 1000,
+              title: `${state.symbol} on ${CONFIG_NETWORK[state.network]} [${
+                state.underlyingAmount
+              } underlying coin]<br />|BUY YT WHEN THE yt Price IS UNDER THE FAIR VALUE CURVE TO MAXIMIZE POINTS EARNED`,
+              XAxis: { title: "Certain Time of Purchasing YT" },
+              yaxis1: { title: "YT Price", side: "left" },
+              yaxis2: {
+                title: "Points Earned",
+                side: "right",
+                overlaying: "y",
+              },
             }}
           />
 
@@ -733,7 +802,9 @@ const StrategyPage = (props: BinemonPageProps) => {
             layout={{
               width: 1500,
               height: 1000,
-              title: `${state.symbol} on ${state.network} <br />|Long Yield APY V.S. Implied APY`,
+              title: `${state.symbol} on ${
+                CONFIG_NETWORK[state.network]
+              } <br />|Long Yield APY V.S. Implied APY`,
               XAxis: { title: "Time" },
               YAxis: { title: "Long Yield APY" },
               yaxis1: { title: "Long Yield APY", side: "left" },
