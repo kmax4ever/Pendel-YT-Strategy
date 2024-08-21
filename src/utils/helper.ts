@@ -82,7 +82,8 @@ export const hourOnlyFormat = (timestamp: number) => {
 };
 
 export const datetimeFormat = (timestamp: number) => {
-  const formatted = moment(timestamp).format("HH:mm:ss DD-MM-YYYY");
+  //const formatted = moment(timestamp).format("HH:mm:ss DD-MM-YYYY");
+  const formatted = moment(timestamp).format("DD-MM-YYYY");
   return formatted;
 };
 

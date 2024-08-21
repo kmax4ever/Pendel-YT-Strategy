@@ -19,7 +19,11 @@ import Plot from "react-plotly.js";
 var DateTime = require("datetime-js");
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import DateTimePicker from "react-datetime-picker";
+import DatePicker from "react-datepicker";
+const _ = require("lodash");
 
+import "react-datepicker/dist/react-datepicker.css";
 interface BinemonPageProps {}
 const CONFIG_NETWORK = {
   1: `Ethereum`,
@@ -100,6 +104,13 @@ const StrategyPage = (props: BinemonPageProps) => {
       console.log("xxx maturityTime ", state.maturityTime);
     }
     return asset[0];
+  };
+
+  const selectTime = (e) => {
+    if (e) {
+      state.ytPurchaseTime = e;
+      console.log(` state.ytPurchaseTime`, state.ytPurchaseTime);
+    }
   };
 
   useEffect(async () => {
@@ -364,8 +375,7 @@ const StrategyPage = (props: BinemonPageProps) => {
             <Text width={200}> underlying_amount: </Text>
             <InputWrapper
               column
-              type="text"
-              value={1}
+              value={state.underlyingAmount}
               width={150}
               //error={}
               style={{ marginLeft: 10 }}
@@ -382,7 +392,7 @@ const StrategyPage = (props: BinemonPageProps) => {
             <InputWrapper
               column
               type="text"
-              value={1}
+              value={state.pointPerHour}
               width={150}
               style={{ marginLeft: 10 }}
               //error={}
@@ -399,7 +409,7 @@ const StrategyPage = (props: BinemonPageProps) => {
             <InputWrapper
               column
               type="text"
-              value={1}
+              value={state.pendelYTMultiplier}
               width={150}
               style={{ marginLeft: 10 }}
               //error={}
@@ -408,6 +418,16 @@ const StrategyPage = (props: BinemonPageProps) => {
               }}
               placeholder="Enter Amount"
               isNumber
+            />
+          </Flex>
+
+          <Flex mt={3}>
+            <Text width={200}> purchase time:</Text>
+            <DatePicker
+              onChange={(e: any) => {
+                selectTime(e);
+              }}
+              selected={new Date(state.ytPurchaseTime)}
             />
           </Flex>
 
@@ -522,23 +542,6 @@ const StrategyPage = (props: BinemonPageProps) => {
               </Flex>
             </>
           ) : null}
-
-          {
-            <Flex mt={3}>
-              <Text width={200}>dark_mode</Text>
-              <Checkbox
-                color="primary"
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    state.query = {};
-                  } else {
-                    state.query = { rank: 1, breed: 1 };
-                  }
-                }}
-                style={{ backgroundColor: "none", color: "white" }}
-              ></Checkbox>
-            </Flex>
-          }
 
           <Flex center justifyContent="space-between" mt={5}>
             <Flex flex={1} height="100%" column center>
@@ -728,28 +731,31 @@ const StrategyPage = (props: BinemonPageProps) => {
                 name: "Points Earned",
                 yaxis: "y2",
               },
-              // {
-              //   x: state.datas.map((i) => i.Time),
-              //   y: state.datas.map((i) => i.difference), //TODO missing fair, difference
-              //   mode: "lines",
-              //   name: "Implied APY",
-              //   yaxis: "y2",
-              // },
-              // {
-              //   mode: `lines`,
-              //   x: [
-              //     new Date(state.ytPurchaseTime).toUTCString(),
-              //     new Date(state.ytPurchaseTime).toUTCString(),
-              //   ],
-              //   y: [1500, 4000],
-              //   line: {
-              //     color: "green",
-              //     width: 3,
-              //     dash: "dashdot",
-              //   },
-              //   name: "YT Purchase time",
-              //   text: "YT Purchase time",
-              // },
+              {
+                x: state.datas.map((i) => i.Time),
+                y: state.datas.map((i) => i.difference), //TODO missing fair, difference
+                mode: "lines",
+                name: "Implied APY",
+                yaxis: "y2",
+              },
+              {
+                mode: `lines`,
+                x: [
+                  new Date(state.ytPurchaseTime).toUTCString(),
+                  new Date(state.ytPurchaseTime).toUTCString(),
+                ],
+                y: [
+                  _.min(state.datas.map((i) => i.ytUnderlying)),
+                  _.max(state.datas.map((i) => i.ytUnderlying)),
+                ],
+                line: {
+                  color: "green",
+                  width: 3,
+                  dash: "dashdot",
+                },
+                name: "YT Purchase time",
+                text: "YT Purchase time",
+              },
             ]}
             layout={{
               width: 1500,
@@ -771,7 +777,12 @@ const StrategyPage = (props: BinemonPageProps) => {
             data={[
               {
                 x: state.datas.map((i) => i.Time),
-                y: state.datas.map((i) => i.longYieldApy),
+                y: state.datas.map(
+                  (i) =>
+                    (_.min(state.datas.map((i) => i.impliedApy)) +
+                      _.max(state.datas.map((i) => i.impliedApy))) /
+                    2
+                ),
                 mode: "lines",
                 name: "Long Yield APY",
                 yaxis: "y1",
@@ -783,21 +794,24 @@ const StrategyPage = (props: BinemonPageProps) => {
                 name: "Implied APY",
                 yaxis: "y2",
               },
-              // {
-              //   mode: `lines`,
-              //   x: [
-              //     new Date(state.ytPurchaseTime).toUTCString(),
-              //     new Date(state.ytPurchaseTime).toUTCString(),
-              //   ],
-              //   y: [1500, 4000],
-              //   line: {
-              //     color: "green",
-              //     width: 3,
-              //     dash: "dashdot",
-              //   },
-              //   name: "YT Purchase time",
-              //   text: "YT Purchase time",
-              // },
+              {
+                mode: `lines`,
+                x: [
+                  new Date(state.ytPurchaseTime).toUTCString(),
+                  new Date(state.ytPurchaseTime).toUTCString(),
+                ],
+                y: [
+                  _.min(state.datas.map((i) => i.impliedApy)),
+                  _.max(state.datas.map((i) => i.impliedApy)),
+                ],
+                line: {
+                  color: "green",
+                  width: 3,
+                  dash: "dashdot",
+                },
+                name: "YT Purchase time",
+                text: "YT Purchase time",
+              },
             ]}
             layout={{
               width: 1500,
@@ -809,6 +823,90 @@ const StrategyPage = (props: BinemonPageProps) => {
               YAxis: { title: "Long Yield APY" },
               yaxis1: { title: "Long Yield APY", side: "left" },
               yaxis2: { title: "Implied APY", side: "right", overlaying: "y" },
+              arrowHead: 1,
+              ax: 20,
+              ay: -30,
+            }}
+          />
+
+          <Plot
+            data={[
+              {
+                x: state.datas.map((i) => i.Time),
+                y: state.datas.map((i) => i.weightedPoints),
+                mode: "lines",
+                name: "Weighted Points ",
+              },
+
+              {
+                mode: `lines`,
+                x: [
+                  new Date(state.ytPurchaseTime).toUTCString(),
+                  new Date(state.ytPurchaseTime).toUTCString(),
+                ],
+                y: [
+                  _.min(state.datas.map((i) => i.weightedPoints)),
+                  _.max(state.datas.map((i) => i.weightedPoints)),
+                ],
+                line: {
+                  color: "green",
+                  width: 3,
+                  dash: "dashdot",
+                },
+                name: "YT Purchase time",
+                text: "YT Purchase time",
+              },
+            ]}
+            layout={{
+              width: 1500,
+              height: 1000,
+              title: `${state.symbol} on ${
+                CONFIG_NETWORK[state.network]
+              } <br /> |Weighted Points (by Volume) Over Time`,
+              XAxis: { title: "Time" },
+              YAxis: { title: "Weighted Points" },
+            }}
+          />
+
+          <Plot
+            data={[
+              {
+                //x: state.datas.map((i) => i.time),
+                y: state.datas.map((i) => i.points),
+                type: "bar",
+                name: "Weighted Points",
+                nBinsx: 300,
+              },
+            ]}
+            layout={{
+              width: 1500,
+              height: 1000,
+              title: `${state.symbol} on ${
+                CONFIG_NETWORK[state.network]
+              } <br />|Distribution of Hours per Points Interval Before Weighting`,
+              XAxis: { title: "Time" },
+              YAxis: { title: "Weighted Points" },
+            }}
+          />
+
+          <Plot
+            data={[
+              {
+                // x: state.datas.map((i) => i.time),
+                y: state.datas.map((i) => i.weightedPoints),
+                type: "bar",
+                name: "Number of Hours",
+                nBinsx: 300,
+              },
+            ]}
+            layout={{
+              width: 1500,
+              height: 1000,
+              title: `${state.symbol} on ${
+                CONFIG_NETWORK[state.network]
+              } <br />|Distribution of Hours per Points Interval After Volume Weighting|`,
+              XAxis: { title: "Weighted Points" },
+              YAxis: { title: "Number of Hours" },
             }}
           />
         </>
