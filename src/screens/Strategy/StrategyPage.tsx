@@ -782,7 +782,7 @@ const StrategyPage = (props: BinemonPageProps) => {
                     (_.min(state.datas.map((i) => i.impliedApy)) +
                       _.max(state.datas.map((i) => i.impliedApy))) /
                     2
-                ),
+                ), //TODO fix
                 mode: "lines",
                 name: "Long Yield APY",
                 yaxis: "y1",
