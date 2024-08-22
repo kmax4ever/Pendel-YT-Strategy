@@ -134,20 +134,24 @@ const StrategyPage = (props: BinemonPageProps) => {
 
       const hourToMaturity = (maturityTimeSeconds - timestampSeconds) / 3600;
 
-      state.datas[i][`Time`] = new Date(timestamp).toUTCString();
+      state.datas[i][`Time`] = new Date(timestamp).toJSON();
 
       state.datas[i]["hourToMaturity"] = hourToMaturity;
 
-      state.datas[i]["ytUnderlying"];
-
-      const ytUnderlying = impliedApy + 1 ** (hourToMaturity / 8760) - 1;
       const longYieldApy =
         (1 + (underlyingApy - impliedApy / impliedApy)) **
           (8760 / hourToMaturity) -
         1;
 
       state.datas[i]["longYieldApy"] = longYieldApy;
-      console.log("xxx longYieldApy", longYieldApy);
+      console.log("xxx longYieldApy", {
+        underlyingApy,
+        impliedApy,
+        hourToMaturity,
+        longYieldApy,
+      });
+      const ytUnderlying = (impliedApy + 1) ** (hourToMaturity / 8760) - 1;
+      //const ytUnderlying = impliedApy + 1 ** (hourToMaturity / 8760) - 1;
 
       state.datas[i]["ytUnderlying"] = ytUnderlying;
 
@@ -241,8 +245,12 @@ const StrategyPage = (props: BinemonPageProps) => {
     //TODO missing fair, difference
 
     console.log(
-      `poins`,
-      state.datas.map((i) => i.points)
+      "time",
+      state.datas.map((i) => i.Time)
+    );
+    console.log(
+      "ytUnderlying",
+      state.datas.map((i) => i.ytUnderlying)
     );
 
     state.chart1Loading = true;
@@ -572,19 +580,33 @@ const StrategyPage = (props: BinemonPageProps) => {
                 y: pendleStore.apy.map((i: any) => i.ytUnderlying),
                 mode: "lines",
                 name: "YT price",
+                yaxis: "y3",
               },
 
               {
                 x: state.datas.map((i) => i.Time),
-                y: bfill(
-                  movingAverage(
-                    state.datas.map((i) => i.impliedApy),
-                    state.config.volatility_window
-                  )
-                ),
+                y: state.datas
+                  .map((i) => i.ytUnderlying)
+                  .map((_, index, array) => {
+                    if (index < state.config.volatility_window - 1) return null;
+                    const window = array.slice(
+                      index - state.config.volatility_window + 1,
+                      index + 1
+                    );
+                    const mean =
+                      window.reduce((sum, value) => sum + value, 0) /
+                      window.length;
+                    const variance =
+                      window.reduce(
+                        (sum, value) => sum + Math.pow(value - mean, 2),
+                        0
+                      ) / window.length;
+                    return Math.sqrt(variance);
+                  })
+                  .map((value) => (value === null ? undefined : value)),
                 mode: "lines",
                 name: "Volatility",
-                yaxis: "y2",
+                yaxis: "y5",
               },
               {
                 x: state.datas.map((i) => i.Time),
@@ -596,6 +618,7 @@ const StrategyPage = (props: BinemonPageProps) => {
                 ),
                 mode: "lines",
                 name: "20-day MA",
+                yaxis: "y3",
               },
               {
                 x: state.datas.map((i) => i.Time),
@@ -607,6 +630,7 @@ const StrategyPage = (props: BinemonPageProps) => {
                 ),
                 mode: "lines",
                 name: "50-day MA",
+                yaxis: "y3",
               },
 
               {
@@ -620,6 +644,7 @@ const StrategyPage = (props: BinemonPageProps) => {
                 mode: "lines",
                 marker: { color: "#e4aa7d" },
                 name: "200-day MA",
+                yaxis: "y3",
               },
               true
                 ? {
@@ -665,7 +690,9 @@ const StrategyPage = (props: BinemonPageProps) => {
               XAxis: { title: "Time" },
               YAxis: { title: "YT Price (per Underlying)" },
               yaxis2: { overlaying: "y", position: 0.85, side: "right" },
+              yaxis3: { overlaying: "y", position: 0.85, side: "right" },
               yaxis4: { overlaying: "y", position: 0.95, side: "right" },
+              yaxis5: { overlaying: "y", position: 0.95, side: "right" },
             }}
           />
 
@@ -779,9 +806,10 @@ const StrategyPage = (props: BinemonPageProps) => {
                 x: state.datas.map((i) => i.Time),
                 y: state.datas.map(
                   (i) =>
-                    (_.min(state.datas.map((i) => i.impliedApy)) +
-                      _.max(state.datas.map((i) => i.impliedApy))) /
-                    2
+                    // (_.min(state.datas.map((i) => i.impliedApy)) +
+                    //   _.max(state.datas.map((i) => i.impliedApy))) /
+                    // 2
+                    i.longYieldApy
                 ), //TODO fix
                 mode: "lines",
                 name: "Long Yield APY",
@@ -820,12 +848,9 @@ const StrategyPage = (props: BinemonPageProps) => {
                 CONFIG_NETWORK[state.network]
               } <br />|Long Yield APY V.S. Implied APY`,
               XAxis: { title: "Time" },
-              YAxis: { title: "Long Yield APY" },
+              YAxis: { title: "Long Yield APY", side: "left" },
               yaxis1: { title: "Long Yield APY", side: "left" },
               yaxis2: { title: "Implied APY", side: "right", overlaying: "y" },
-              arrowHead: 1,
-              ax: 20,
-              ay: -30,
             }}
           />
 
