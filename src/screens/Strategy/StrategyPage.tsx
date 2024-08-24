@@ -60,7 +60,7 @@ const StrategyPage = (props: BinemonPageProps) => {
     SignalLine: [],
     RSI: [],
     FAIRS: [] as any,
-    hourRange: [] as any,
+    fairHourRange: [] as any,
     config: {
       volatility_window: 48,
       ma1: 24,
@@ -246,13 +246,13 @@ const StrategyPage = (props: BinemonPageProps) => {
       console.log("fairValueCurve", i, fairValueCurve);
       //state.datas[i][`fair`] = fairValueCurve; // recheck
       state.FAIRS.push(fairValueCurve);
-      const date = new Date((maxTimestampOfDatas + secondsRange) * 1000);
+      const date = new Date(timestamp * 1000);
       console.log(date.toJSON());
 
-      state.hourRange.unshift(date.toJSON());
+      state.fairHourRange.push(date.toJSON());
     }
 
-    console.log("state hourrange", state.hourRange);
+    console.log("state hourrange", state.fairHourRange);
 
     const ema12 = bfill(
       movingAverage(
@@ -807,7 +807,7 @@ const StrategyPage = (props: BinemonPageProps) => {
                 yaxis: "y2",
               },
               {
-                x: state.hourRange,
+                x: state.fairHourRange,
                 y: state.FAIRS,
                 mode: "lines",
                 name: "Fair Value Curve of YT",
