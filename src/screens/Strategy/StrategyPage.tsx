@@ -59,6 +59,8 @@ const StrategyPage = (props: BinemonPageProps) => {
     MACD: [],
     SignalLine: [],
     RSI: [],
+    FAIRS: [] as any,
+    hourRange: [] as any,
     config: {
       volatility_window: 48,
       ma1: 24,
@@ -72,6 +74,7 @@ const StrategyPage = (props: BinemonPageProps) => {
     chart1Loading: false,
     ytPurchaseTime: "2024-08-12",
     hRange: 0,
+    impliedApyAvgSum: 0,
   }));
 
   const handleSetMarketAddress = (value: string) => {
@@ -183,24 +186,73 @@ const StrategyPage = (props: BinemonPageProps) => {
       const hourRange = hourToMaturity; //recheck
 
       const impliedApyAverage = (impliedApy * volume) / pendleStore.sumVolume;
-      const fairValueCurve =
-        1 - 1 / (1 + impliedApyAverage) ** (hourRange / 8760);
 
-      console.log("impliedApyAverage", impliedApyAverage);
-
-      state.datas[i][`fair`] = fairValueCurve; // recheck
+      state.impliedApyAvgSum += impliedApyAverage;
+      // console.log("impliedApyAverage", impliedApyAverage);
+      // console.log("  state.impliedApyAvgSum", state.impliedApyAvgSum);
 
       const weightedPoints = (points * volume) / pendleStore.sumVolume;
       state.datas[i].weightedPoints = weightedPoints;
       state.weightedPointsPerUnderlying += weightedPoints;
     }
+    //CACULATE FAIR
+    // for (let i = 0; i < state.datas.length; i++) {
+    //   const { timestamp } = state.datas[i];
 
-    if (state.maturityTime) {
-      state.hRange =
-        (new Date(state.startTime).getTime() / 1000 -
-          new Date(state.maturityTime).getTime() / 1000) /
-        3600;
+    //   const secondsRange =
+    //     new Date(state.maturityTime).getTime() / 1000 -
+    //     new Date(timestamp).getTime() / 1000;
+
+    //   console.log("seconds range", secondsRange);
+    //   const hourRange = secondsRange / 3600;
+    //   console.log("xxx hourRange", hourRange);
+
+    //   const fairValueCurve =
+    //     1 - 1 / (1 + state.impliedApyAvgSum) ** (hourRange / 8670);
+
+    //   console.log("fairValueCurve", fairValueCurve);
+    //   state.datas[i][`fair`] = fairValueCurve; // recheck
+    // }
+
+    const maxTimestampOfDatas =
+      new Date(state.datas[state.datas.length - 1].timestamp).getTime() / 1000;
+
+    const index = 2056 - state.datas.length;
+    const range = index * 3600;
+    const end = new Date((maxTimestampOfDatas + range) * 1000);
+    const length = state.datas.length;
+    console.log(end.toJSON());
+
+    for (let i = 0; i < 2056; i++) {
+      let timestamp = state.datas[i]
+        ? new Date(state.datas[i].timestamp).getTime() / 1000
+        : 0;
+
+      if (!timestamp) {
+        const range = (i - length) * 3600;
+        timestamp = maxTimestampOfDatas + range;
+      }
+
+      const secondsRange = new Date(end).getTime() / 1000 - timestamp;
+
+      const hourRange = secondsRange / 3600;
+      console.log("i", i);
+
+      console.log("xxx hourRange", hourRange);
+
+      const fairValueCurve =
+        1 - 1 / (1 + state.impliedApyAvgSum) ** (hourRange / 8670);
+
+      console.log("fairValueCurve", i, fairValueCurve);
+      //state.datas[i][`fair`] = fairValueCurve; // recheck
+      state.FAIRS.push(fairValueCurve);
+      const date = new Date((maxTimestampOfDatas + secondsRange) * 1000);
+      console.log(date.toJSON());
+
+      state.hourRange.unshift(date.toJSON());
     }
+
+    console.log("state hourrange", state.hourRange);
 
     const ema12 = bfill(
       movingAverage(
@@ -755,11 +807,10 @@ const StrategyPage = (props: BinemonPageProps) => {
                 yaxis: "y2",
               },
               {
-                x: state.datas.map((i) => i.Time),
-                y: state.datas.map((i) => i.fair),
+                x: state.hourRange,
+                y: state.FAIRS,
                 mode: "lines",
                 name: "Fair Value Curve of YT",
-                yaxis: "y2",
                 line: {
                   color: "yellow",
                   width: 3,
