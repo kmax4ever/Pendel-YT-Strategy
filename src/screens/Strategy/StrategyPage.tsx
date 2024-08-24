@@ -320,6 +320,21 @@ const StrategyPage = (props: BinemonPageProps) => {
     return arr;
   };
 
+  const rolingStdBfillArr = (arr = [], windowNumber = 0) => {
+    return arr
+      .map((_, index, array) => {
+        if (index < windowNumber - 1) return null;
+        const window = array.slice(index - windowNumber + 1, index + 1);
+        const mean =
+          window.reduce((sum, value) => sum + value, 0) / window.length;
+        const variance =
+          window.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) /
+          window.length;
+        return Math.sqrt(variance);
+      })
+      .map((value) => (value === null ? undefined : value));
+  };
+
   const diff = (arr: []) => {
     const delta = arr.map((value, index, array) => {
       if (index === 0) return 0; // or any other value to represent the first diff
@@ -592,25 +607,10 @@ const StrategyPage = (props: BinemonPageProps) => {
 
               {
                 x: state.datas.map((i) => i.Time),
-                y: state.datas
-                  .map((i) => i.ytUnderlying)
-                  .map((_, index, array) => {
-                    if (index < state.config.volatility_window - 1) return null;
-                    const window = array.slice(
-                      index - state.config.volatility_window + 1,
-                      index + 1
-                    );
-                    const mean =
-                      window.reduce((sum, value) => sum + value, 0) /
-                      window.length;
-                    const variance =
-                      window.reduce(
-                        (sum, value) => sum + Math.pow(value - mean, 2),
-                        0
-                      ) / window.length;
-                    return Math.sqrt(variance);
-                  })
-                  .map((value) => (value === null ? undefined : value)),
+                y: rolingStdBfillArr(
+                  state.datas.map((i) => i.ytUnderlying),
+                  state.config.volatility_window
+                ),
                 mode: "lines",
                 name: "Volatility",
                 yaxis: "y5",
@@ -706,16 +706,6 @@ const StrategyPage = (props: BinemonPageProps) => {
                 mode: "lines",
                 name: "Points",
               },
-
-              // {
-              //   x: new Date("2024-08-10").toUTCString(),
-              //   mode: "dash",
-              //   color: "green",
-              //   width: 3,
-              //   name: "xx",
-              //   type: "scatter",
-              //   height: 1000,
-              // },
               {
                 mode: `lines`,
                 x: [
