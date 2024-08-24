@@ -22,7 +22,7 @@ const Header = (props: any) => {
     <Flex
       boxShadow={3}
       zIndex={theme.zIndex.appBar}
-      height={70}
+      height={0}
       pl={2}
       pr={1}
       bgcolor="headerBg"

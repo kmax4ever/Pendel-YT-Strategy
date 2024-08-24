@@ -71,6 +71,7 @@ const StrategyPage = (props: BinemonPageProps) => {
     },
     chart1Loading: false,
     ytPurchaseTime: "2024-08-12",
+    hRange: 0,
   }));
 
   const handleSetMarketAddress = (value: string) => {
@@ -184,11 +185,21 @@ const StrategyPage = (props: BinemonPageProps) => {
       const impliedApyAverage = (impliedApy * volume) / pendleStore.sumVolume;
       const fairValueCurve =
         1 - 1 / (1 + impliedApyAverage) ** (hourRange / 8760);
+
+      console.log("impliedApyAverage", impliedApyAverage);
+
       state.datas[i][`fair`] = fairValueCurve; // recheck
 
       const weightedPoints = (points * volume) / pendleStore.sumVolume;
       state.datas[i].weightedPoints = weightedPoints;
       state.weightedPointsPerUnderlying += weightedPoints;
+    }
+
+    if (state.maturityTime) {
+      state.hRange =
+        (new Date(state.startTime).getTime() / 1000 -
+          new Date(state.maturityTime).getTime() / 1000) /
+        3600;
     }
 
     const ema12 = bfill(
@@ -245,12 +256,8 @@ const StrategyPage = (props: BinemonPageProps) => {
     //TODO missing fair, difference
 
     console.log(
-      "time",
-      state.datas.map((i) => i.Time)
-    );
-    console.log(
-      "ytUnderlying",
-      state.datas.map((i) => i.ytUnderlying)
+      "fair",
+      state.datas.map((i) => i.fair)
     );
 
     state.chart1Loading = true;
@@ -646,30 +653,25 @@ const StrategyPage = (props: BinemonPageProps) => {
                 name: "200-day MA",
                 yaxis: "y3",
               },
-              true
-                ? {
-                    x: state.datas.map((i) => i.Time),
-                    y: state.MACD,
-                    mode: "lines",
-                    name: "MACD",
-                    yaxis: "y4",
-                  }
-                : null,
-              true
-                ? {
-                    x: state.datas.map((i) => i.Time),
-                    y: state.SignalLine,
-                    mode: "lines",
-                    name: "SignalLine",
-                    yaxis: "y4",
-                  }
-                : null,
-
+              {
+                x: state.datas.map((i) => i.Time),
+                y: state.MACD,
+                mode: "lines",
+                name: "MACD",
+                yaxis: "y4",
+              },
+              {
+                x: state.datas.map((i) => i.Time),
+                y: state.SignalLine,
+                mode: "lines",
+                name: "SignalLine",
+                yaxis: "y4",
+              },
               {
                 mode: `lines`,
                 x: [
-                  new Date(state.ytPurchaseTime).toUTCString(),
-                  new Date(state.ytPurchaseTime).toUTCString(),
+                  new Date(state.ytPurchaseTime).toJSON(),
+                  new Date(state.ytPurchaseTime).toJSON(),
                 ],
                 y: [0.1, 0.25],
                 line: {
@@ -704,6 +706,7 @@ const StrategyPage = (props: BinemonPageProps) => {
                 mode: "lines",
                 name: "Points",
               },
+
               // {
               //   x: new Date("2024-08-10").toUTCString(),
               //   mode: "dash",
@@ -716,10 +719,13 @@ const StrategyPage = (props: BinemonPageProps) => {
               {
                 mode: `lines`,
                 x: [
-                  new Date(state.ytPurchaseTime).toUTCString(),
-                  new Date(state.ytPurchaseTime).toUTCString(),
+                  new Date(state.ytPurchaseTime).toJSON(),
+                  new Date(state.ytPurchaseTime).toJSON(),
                 ],
-                y: [1500, 4000],
+                y: [
+                  _.min(state.datas.map((i) => i.points)),
+                  _.max(state.datas.map((i) => i.points)),
+                ],
                 line: {
                   color: "green",
                   width: 3,
@@ -760,16 +766,21 @@ const StrategyPage = (props: BinemonPageProps) => {
               },
               {
                 x: state.datas.map((i) => i.Time),
-                y: state.datas.map((i) => i.difference), //TODO missing fair, difference
+                y: state.datas.map((i) => i.fair),
                 mode: "lines",
-                name: "Implied APY",
+                name: "Fair Value Curve of YT",
                 yaxis: "y2",
+                line: {
+                  color: "yellow",
+                  width: 3,
+                  dash: "dashdot",
+                },
               },
               {
                 mode: `lines`,
                 x: [
-                  new Date(state.ytPurchaseTime).toUTCString(),
-                  new Date(state.ytPurchaseTime).toUTCString(),
+                  new Date(state.ytPurchaseTime).toJSON(),
+                  new Date(state.ytPurchaseTime).toJSON(),
                 ],
                 y: [
                   _.min(state.datas.map((i) => i.ytUnderlying)),
@@ -804,29 +815,23 @@ const StrategyPage = (props: BinemonPageProps) => {
             data={[
               {
                 x: state.datas.map((i) => i.Time),
-                y: state.datas.map(
-                  (i) =>
-                    // (_.min(state.datas.map((i) => i.impliedApy)) +
-                    //   _.max(state.datas.map((i) => i.impliedApy))) /
-                    // 2
-                    i.longYieldApy
-                ), //TODO fix
+                y: state.datas.map((i) => i.longYieldApy), //TODO fix
                 mode: "lines",
                 name: "Long Yield APY",
-                yaxis: "y1",
+                text: "Long Yield APY",
               },
               {
                 x: state.datas.map((i) => i.Time),
                 y: state.datas.map((i) => i.impliedApy),
                 mode: "lines",
                 name: "Implied APY",
-                yaxis: "y2",
+                yaxis: "y3",
               },
               {
                 mode: `lines`,
                 x: [
-                  new Date(state.ytPurchaseTime).toUTCString(),
-                  new Date(state.ytPurchaseTime).toUTCString(),
+                  new Date(state.ytPurchaseTime).toJSON(),
+                  new Date(state.ytPurchaseTime).toJSON(),
                 ],
                 y: [
                   _.min(state.datas.map((i) => i.impliedApy)),
@@ -839,6 +844,7 @@ const StrategyPage = (props: BinemonPageProps) => {
                 },
                 name: "YT Purchase time",
                 text: "YT Purchase time",
+                yaxis: "y4",
               },
             ]}
             layout={{
@@ -848,9 +854,8 @@ const StrategyPage = (props: BinemonPageProps) => {
                 CONFIG_NETWORK[state.network]
               } <br />|Long Yield APY V.S. Implied APY`,
               XAxis: { title: "Time" },
-              YAxis: { title: "Long Yield APY", side: "left" },
-              yaxis1: { title: "Long Yield APY", side: "left" },
-              yaxis2: { title: "Implied APY", side: "right", overlaying: "y" },
+              yaxis3: { title: "Implied APY", side: "right", overlaying: "y" },
+              yaxis4: { title: "YT Purchase time", overlaying: "y" },
             }}
           />
 
@@ -866,8 +871,8 @@ const StrategyPage = (props: BinemonPageProps) => {
               {
                 mode: `lines`,
                 x: [
-                  new Date(state.ytPurchaseTime).toUTCString(),
-                  new Date(state.ytPurchaseTime).toUTCString(),
+                  new Date(state.ytPurchaseTime).toJSON(),
+                  new Date(state.ytPurchaseTime).toJSON(),
                 ],
                 y: [
                   _.min(state.datas.map((i) => i.weightedPoints)),
