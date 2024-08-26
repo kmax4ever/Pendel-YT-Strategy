@@ -53,7 +53,7 @@ const AppDrawer = (props: AppDrawerProps) => {
     //   path: "/user",
     // },
     {
-      name: "strategy",
+      name: "Strategy",
       Icon: AssessmentIcon,
       isActive: location.pathname.includes("/strategy"),
       path: "/strategy",
@@ -96,9 +96,7 @@ const AppDrawer = (props: AppDrawerProps) => {
               ml={1}
               color="white"
               style={{ fontSize: 25, fontWeight: "bold" }}
-            >
-              CMS
-            </Text>
+            ></Text>
           ) : null}
         </Flex>
       </Flex>
@@ -205,7 +203,7 @@ const useStyles = makeStyles((theme: AppTheme) =>
     drawer: {
       [theme.breakpoints.up("md")]: {
         width: (props: any) => {
-          return !props.isCollapse ? 248 : 70;
+          return !props.isCollapse ? 150 : 70;
         },
         flexShrink: 0,
       },
@@ -213,8 +211,8 @@ const useStyles = makeStyles((theme: AppTheme) =>
     appBar: {
       [theme.breakpoints.up("md")]: {
         width: (props: any) =>
-          !props.isCollapse ? `calc(100% - ${248}px)` : `calc(100% - ${70}px)`,
-        marginLeft: (props: any) => (!props.isCollapse ? 248 : 70),
+          !props.isCollapse ? `calc(100% - ${150}px)` : `calc(100% - ${70}px)`,
+        marginLeft: (props: any) => (!props.isCollapse ? 150 : 70),
       },
     },
     menuButton: {
@@ -228,7 +226,7 @@ const useStyles = makeStyles((theme: AppTheme) =>
       backgroundColor: Colors.drawerBg,
     },
     drawerPaper: {
-      width: (props: any) => (!props.isCollapse ? 248 : 70),
+      width: (props: any) => (!props.isCollapse ? 150 : 70),
       backgroundColor: Colors.drawerBg,
     },
     content: {

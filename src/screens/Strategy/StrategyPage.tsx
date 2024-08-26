@@ -31,6 +31,11 @@ const CONFIG_NETWORK = {
   5000: `Mantle`,
 };
 
+const CHART_SIZE = {
+  width: 1700,
+  height: 1000,
+};
+
 const StrategyPage = (props: BinemonPageProps) => {
   const styles = useStyles(props);
   const { pendleStore } = useDepsContainer();
@@ -195,24 +200,6 @@ const StrategyPage = (props: BinemonPageProps) => {
       state.datas[i].weightedPoints = weightedPoints;
       state.weightedPointsPerUnderlying += weightedPoints;
     }
-    //CACULATE FAIR
-    // for (let i = 0; i < state.datas.length; i++) {
-    //   const { timestamp } = state.datas[i];
-
-    //   const secondsRange =
-    //     new Date(state.maturityTime).getTime() / 1000 -
-    //     new Date(timestamp).getTime() / 1000;
-
-    //   console.log("seconds range", secondsRange);
-    //   const hourRange = secondsRange / 3600;
-    //   console.log("xxx hourRange", hourRange);
-
-    //   const fairValueCurve =
-    //     1 - 1 / (1 + state.impliedApyAvgSum) ** (hourRange / 8670);
-
-    //   console.log("fairValueCurve", fairValueCurve);
-    //   state.datas[i][`fair`] = fairValueCurve; // recheck
-    // }
 
     const maxTimestampOfDatas =
       new Date(state.datas[state.datas.length - 1].timestamp).getTime() / 1000;
@@ -277,36 +264,6 @@ const StrategyPage = (props: BinemonPageProps) => {
     state.MACD = MACD;
     state.SignalLine = sinalLine;
 
-    // const delta = diff(state.datas.map((i) => i.ytUnderlying));
-
-    // const gain = bfill(
-    //   movingAverage(
-    //     delta.map((i) => {
-    //       if (i < 0) return 0;
-    //     }),
-    //     state.config.ma2
-    //   )
-    // );
-
-    // const lost = bfill(
-    //   movingAverage(
-    //     delta.map((i) => {
-    //       i = -i;
-    //       if (-i > 0) return 0;
-    //     }),
-    //     72
-    //   )
-    // );
-
-    // console.log({ gain, lost });
-
-    // const rs = [] as any;
-    // for (let i = 0; i < gain.length; i++) {
-    //   rs.push(+gain[i] / +lost[i]);
-    // }
-
-    //TODO missing fair, difference
-
     console.log(
       "fair",
       state.datas.map((i) => i.fair)
@@ -332,7 +289,6 @@ const StrategyPage = (props: BinemonPageProps) => {
           handleGetAsset(pendleStore.pendleAssets, BASE_TYPE, state.ytAddress);
         }
       }
-      await processData();
     }
   }, [state.network, state.ytAddress]);
 
@@ -347,10 +303,6 @@ const StrategyPage = (props: BinemonPageProps) => {
       );
     }
   }, [state.network, state.marketAddress]);
-
-  const analyzer = () => {
-    console.log(state);
-  };
 
   const movingAverage = (data, window) => {
     const result = new Array(data.length).fill(null);
@@ -387,14 +339,6 @@ const StrategyPage = (props: BinemonPageProps) => {
       .map((value) => (value === null ? undefined : value));
   };
 
-  const diff = (arr: []) => {
-    const delta = arr.map((value, index, array) => {
-      if (index === 0) return 0; // or any other value to represent the first diff
-      return value - array[index - 1];
-    });
-    return delta;
-  };
-
   return (
     <div>
       <Flex flex={1} left>
@@ -406,9 +350,7 @@ const StrategyPage = (props: BinemonPageProps) => {
           }}
           paddingLeft={10}
         >
-          <Text variant="formHeader">STRATEGY</Text>
-
-          <Flex>
+          <Flex style={{ marginTop: 50 }}>
             <Text width={150}> Network:</Text>
             <Select
               color="primary"
@@ -513,30 +455,30 @@ const StrategyPage = (props: BinemonPageProps) => {
             />
           </Flex>
 
-          <Flex mt={3}>
-            <Text variant="dialogHeader" width={200}>
-              Optional Form #1
-            </Text>
-            <Checkbox
-              color="primary"
-              onChange={(e) => {
-                if (e.target.checked) {
-                  state.isUseOptionalFrom1 = true;
-                } else {
-                  state.isUseOptionalFrom1 = false;
-                }
-              }}
-              style={{ backgroundColor: "none", color: "white" }}
-            ></Checkbox>
+          <Flex center justifyContent="space-between" mt={5}>
+            <Flex flex={1} height="100%" column center>
+              <Button
+                fullWidth
+                onClick={() => {
+                  processData();
+                }}
+                variant="contained"
+                color="secondary"
+                style={{ padding: "10px 0", height: "auto", flex: 1 }}
+              >
+                ANALYZER
+              </Button>
+            </Flex>
           </Flex>
         </Flex>
       </Flex>
 
       {!state.chart1Loading ? (
-        <Skeleton count={10} />
+        <Skeleton count={1} />
       ) : (
         <>
           <Plot
+            style={{ marginTop: 10 }}
             data={[
               {
                 x: state.datas.map((i) => i.Time),
@@ -625,8 +567,8 @@ const StrategyPage = (props: BinemonPageProps) => {
               },
             ]}
             layout={{
-              width: 1500,
-              height: 1000,
+              width: CHART_SIZE.width,
+              height: CHART_SIZE.height,
               title: `${state.symbol} on ${
                 CONFIG_NETWORK[state.network]
               } YT/Underlying Asset`,
@@ -667,8 +609,8 @@ const StrategyPage = (props: BinemonPageProps) => {
               },
             ]}
             layout={{
-              width: 1500,
-              height: 1000,
+              width: CHART_SIZE.width,
+              height: CHART_SIZE.height,
               title: ` ${state.symbol} on ${
                 CONFIG_NETWORK[state.network]
               } <br />|Total number of points earned from ${
@@ -726,8 +668,8 @@ const StrategyPage = (props: BinemonPageProps) => {
               },
             ]}
             layout={{
-              width: 1500,
-              height: 1000,
+              width: CHART_SIZE.width,
+              height: CHART_SIZE.height,
               title: `${state.symbol} on ${CONFIG_NETWORK[state.network]} [${
                 state.underlyingAmount
               } underlying coin]<br />|BUY YT WHEN THE yt Price IS UNDER THE FAIR VALUE CURVE TO MAXIMIZE POINTS EARNED`,
@@ -778,8 +720,8 @@ const StrategyPage = (props: BinemonPageProps) => {
               },
             ]}
             layout={{
-              width: 1500,
-              height: 1000,
+              width: CHART_SIZE.width,
+              height: CHART_SIZE.height,
               title: `${state.symbol} on ${
                 CONFIG_NETWORK[state.network]
               } <br />|Long Yield APY V.S. Implied APY`,
@@ -818,8 +760,8 @@ const StrategyPage = (props: BinemonPageProps) => {
               },
             ]}
             layout={{
-              width: 1500,
-              height: 1000,
+              width: CHART_SIZE.width,
+              height: CHART_SIZE.height,
               title: `${state.symbol} on ${
                 CONFIG_NETWORK[state.network]
               } <br /> |Weighted Points (by Volume) Over Time`,
@@ -860,8 +802,8 @@ const StrategyPage = (props: BinemonPageProps) => {
               },
             ]}
             layout={{
-              width: 1500,
-              height: 1000,
+              width: CHART_SIZE.width,
+              height: CHART_SIZE.height,
               title: `${state.symbol} on ${
                 CONFIG_NETWORK[state.network]
               } <br />|Distribution of Hours per Points Interval After Volume Weighting|`,
