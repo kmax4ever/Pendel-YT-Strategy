@@ -19,9 +19,9 @@ import Plot from "react-plotly.js";
 var DateTime = require("datetime-js");
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import DateTimePicker from "react-datetime-picker";
 import DatePicker from "react-datepicker";
 const _ = require("lodash");
+import { ConfirmModalInstance } from "App";
 
 import "react-datepicker/dist/react-datepicker.css";
 interface BinemonPageProps {}
@@ -45,8 +45,8 @@ const StrategyPage = (props: BinemonPageProps) => {
     isUseOptionalFrom1: false,
     isUseOptionalFrom2: false,
     // marketAddress: "0x00b321d89a8c36b3929f20b7955080baed706d1b",
-    marketAddress: "0x00b321d89a8c36b3929f20b7955080baed706d1b",
-    ytAddress: "0x4f0b4e6512630480b868e62a8a1d3451b0e9192d",
+    marketAddress: "0xd8f12bcde578c653014f27379a6114f67f0e445f",
+    ytAddress: "0x7749f5ed1e356edc63d469c2fcac9adeb56d1c2b",
     underlyingAmount: 1,
     pointPerHour: 0.04,
     pendelYTMultiplier: 5,
@@ -134,6 +134,16 @@ const StrategyPage = (props: BinemonPageProps) => {
   const processData = async () => {
     state.datas = pendleStore.apy;
 
+    if (!state.maturityTime) {
+      ConfirmModalInstance.addMessage({
+        children: `Can not load asset data,try again later?`,
+        isSuccessErrorAlert: "ERROR",
+      });
+      return;
+    }
+
+    console.log("length", state.datas.length);
+
     for (let i = 0; i < state.datas.length; i++) {
       const volume = pendleStore.volume[i];
       const { timestamp, impliedApy, underlyingApy } = state.datas[i];
@@ -148,17 +158,17 @@ const StrategyPage = (props: BinemonPageProps) => {
       state.datas[i]["hourToMaturity"] = hourToMaturity;
 
       const longYieldApy =
-        (1 + (underlyingApy - impliedApy / impliedApy)) **
+        (1 + (underlyingApy - impliedApy) / impliedApy) **
           (8760 / hourToMaturity) -
         1;
 
       state.datas[i]["longYieldApy"] = longYieldApy;
-      console.log("xxx longYieldApy", {
-        underlyingApy,
-        impliedApy,
-        hourToMaturity,
-        longYieldApy,
-      });
+      // console.log("xxx longYieldApy", {
+      //   underlyingApy,
+      //   impliedApy,
+      //   hourToMaturity,
+      //   longYieldApy,
+      // });
       const ytUnderlying = (impliedApy + 1) ** (hourToMaturity / 8760) - 1;
       //const ytUnderlying = impliedApy + 1 ** (hourToMaturity / 8760) - 1;
 
@@ -174,37 +184,14 @@ const StrategyPage = (props: BinemonPageProps) => {
         state.pendelYTMultiplier;
       state.datas[i][`points`] = points;
 
-      if (hourToMaturity < 0) {
-        console.log("timestamp", timestamp);
-        console.log("maturityTime", state.maturityTime);
-        process.exit();
-      }
-
-      console.log({
-        price,
-        timeDiffHours,
-        pointPerHour: state.pointPerHour,
-        underlyingAmount: state.underlyingAmount,
-        pendelYTMultiplier: state.pendelYTMultiplier,
-      });
-
-      const hourRange = hourToMaturity; //recheck
-
       const impliedApyAverage = (impliedApy * volume) / pendleStore.sumVolume;
 
       state.impliedApyAvgSum += impliedApyAverage;
-      // console.log("impliedApyAverage", impliedApyAverage);
-      // console.log("  state.impliedApyAvgSum", state.impliedApyAvgSum);
 
       const weightedPoints = (points * volume) / pendleStore.sumVolume;
       state.datas[i].weightedPoints = weightedPoints;
       state.weightedPointsPerUnderlying += weightedPoints;
     }
-
-    console.log(
-      "weighted_points",
-      state.datas.map((i) => i.weightedPoints)
-    );
 
     const maxTimestampOfDatas =
       new Date(state.datas[state.datas.length - 1].timestamp).getTime() / 1000;
@@ -237,6 +224,11 @@ const StrategyPage = (props: BinemonPageProps) => {
       state.fairHourRange.push(date.toJSON());
     }
 
+    console.log(
+      "long yield apy",
+      state.datas.map((i) => i.longYieldApy)
+    );
+
     const ema12 = bfill(
       movingAverage(
         state.datas.map((i) => i.impliedApy),
@@ -261,11 +253,6 @@ const StrategyPage = (props: BinemonPageProps) => {
     state.SignalLine = sinalLine;
 
     state.chart1Loading = true;
-
-    console.log(
-      "points",
-      state.datas.map((i) => i.points)
-    );
   };
 
   useEffect(async () => {
