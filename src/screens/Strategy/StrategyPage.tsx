@@ -45,8 +45,8 @@ const StrategyPage = (props: BinemonPageProps) => {
     isUseOptionalFrom1: false,
     isUseOptionalFrom2: false,
     // marketAddress: "0x00b321d89a8c36b3929f20b7955080baed706d1b",
-    marketAddress: "0xd8f12bcde578c653014f27379a6114f67f0e445f",
-    ytAddress: "0x7749f5ed1e356edc63d469c2fcac9adeb56d1c2b",
+    marketAddress: "0xd1d7d99764f8a52aff007b7831cc02748b2013b5",
+    ytAddress: "0xdc02b77a3986da62c7a78fed73949c9767850809",
     underlyingAmount: 1,
     pointPerHour: 0.04,
     pendelYTMultiplier: 5,
@@ -196,12 +196,12 @@ const StrategyPage = (props: BinemonPageProps) => {
     const maxTimestampOfDatas =
       new Date(state.datas[state.datas.length - 1].timestamp).getTime() / 1000;
 
-    const index = 2056 - state.datas.length;
+    const index = 3045 - state.datas.length;
     const range = index * 3600;
     const end = new Date((maxTimestampOfDatas + range) * 1000);
     const length = state.datas.length;
 
-    for (let i = 0; i < 2056; i++) {
+    for (let i = 0; i < 3045; i++) {
       let timestamp = state.datas[i]
         ? new Date(state.datas[i].timestamp).getTime() / 1000
         : 0;
