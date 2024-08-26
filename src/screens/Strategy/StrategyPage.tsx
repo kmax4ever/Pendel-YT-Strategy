@@ -201,6 +201,11 @@ const StrategyPage = (props: BinemonPageProps) => {
       state.weightedPointsPerUnderlying += weightedPoints;
     }
 
+    console.log(
+      "weighted_points",
+      state.datas.map((i) => i.weightedPoints)
+    );
+
     const maxTimestampOfDatas =
       new Date(state.datas[state.datas.length - 1].timestamp).getTime() / 1000;
 
@@ -208,7 +213,6 @@ const StrategyPage = (props: BinemonPageProps) => {
     const range = index * 3600;
     const end = new Date((maxTimestampOfDatas + range) * 1000);
     const length = state.datas.length;
-    console.log(end.toJSON());
 
     for (let i = 0; i < 2056; i++) {
       let timestamp = state.datas[i]
@@ -223,23 +227,15 @@ const StrategyPage = (props: BinemonPageProps) => {
       const secondsRange = new Date(end).getTime() / 1000 - timestamp;
 
       const hourRange = secondsRange / 3600;
-      console.log("i", i);
-
-      console.log("xxx hourRange", hourRange);
 
       const fairValueCurve =
         1 - 1 / (1 + state.impliedApyAvgSum) ** (hourRange / 8670);
 
-      console.log("fairValueCurve", i, fairValueCurve);
-      //state.datas[i][`fair`] = fairValueCurve; // recheck
       state.FAIRS.push(fairValueCurve);
       const date = new Date(timestamp * 1000);
-      console.log(date.toJSON());
 
       state.fairHourRange.push(date.toJSON());
     }
-
-    console.log("state hourrange", state.fairHourRange);
 
     const ema12 = bfill(
       movingAverage(
@@ -264,12 +260,12 @@ const StrategyPage = (props: BinemonPageProps) => {
     state.MACD = MACD;
     state.SignalLine = sinalLine;
 
-    console.log(
-      "fair",
-      state.datas.map((i) => i.fair)
-    );
-
     state.chart1Loading = true;
+
+    console.log(
+      "points",
+      state.datas.map((i) => i.points)
+    );
   };
 
   useEffect(async () => {
@@ -424,7 +420,6 @@ const StrategyPage = (props: BinemonPageProps) => {
                 state.pointPerHour = e.target.value;
               }}
               placeholder="Enter amount"
-              isNumber
             />
           </Flex>
 
@@ -773,20 +768,17 @@ const StrategyPage = (props: BinemonPageProps) => {
           <Plot
             data={[
               {
-                //x: state.datas.map((i) => i.time),
                 y: state.datas.map((i) => i.points),
+                name: "Points",
                 type: "bar",
-                name: "Weighted Points",
-                nBinsx: 300,
               },
             ]}
             layout={{
-              width: 1500,
-              height: 1000,
+              width: CHART_SIZE.width,
+              height: CHART_SIZE.height,
               title: `${state.symbol} on ${
                 CONFIG_NETWORK[state.network]
               } <br />|Distribution of Hours per Points Interval Before Weighting`,
-              XAxis: { title: "Time" },
               YAxis: { title: "Weighted Points" },
             }}
           />
@@ -794,11 +786,9 @@ const StrategyPage = (props: BinemonPageProps) => {
           <Plot
             data={[
               {
-                // x: state.datas.map((i) => i.time),
                 y: state.datas.map((i) => i.weightedPoints),
                 type: "bar",
                 name: "Number of Hours",
-                nBinsx: 300,
               },
             ]}
             layout={{
