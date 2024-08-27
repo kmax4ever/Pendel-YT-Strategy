@@ -45,8 +45,8 @@ const StrategyPage = (props: BinemonPageProps) => {
     isUseOptionalFrom1: false,
     isUseOptionalFrom2: false,
     // marketAddress: "0x00b321d89a8c36b3929f20b7955080baed706d1b",
-    marketAddress: "0x00b321d89a8c36b3929f20b7955080baed706d1b",
-    ytAddress: "0x4f0b4e6512630480b868e62a8a1d3451b0e9192d",
+    marketAddress: "0xbbf399db59a845066aafce9ae55e68c505fa97b7",
+    ytAddress: "0x279e76fa6310976dc651c5f48ec7e768e9e2ccb4",
     underlyingAmount: 1,
     pointPerHour: 0.04,
     pendelYTMultiplier: 5,
@@ -224,20 +224,15 @@ const StrategyPage = (props: BinemonPageProps) => {
       state.fairHourRange.push(date.toJSON());
     }
 
-    console.log(
-      "long yield apy",
-      state.datas.map((i) => i.longYieldApy)
-    );
-
     const ema12 = bfill(
-      movingAverage(
-        state.datas.map((i) => i.impliedApy),
+      EMACalc(
+        state.datas.map((i) => i.ytUnderlying),
         state.config.ema1
       )
     );
     const ema26 = bfill(
-      movingAverage(
-        state.datas.map((i) => i.impliedApy),
+      EMACalc(
+        state.datas.map((i) => i.ytUnderlying),
         state.config.ema2
       )
     );
@@ -247,10 +242,12 @@ const StrategyPage = (props: BinemonPageProps) => {
       MACD.push(+ema12[i] - +ema26[i]);
     }
 
-    const sinalLine = bfill(movingAverage(MACD, 9));
+    const sinalLine = bfill(EMACalc(MACD, state.config.macd_signal));
 
     state.MACD = MACD;
     state.SignalLine = sinalLine;
+
+    console.log("ema12", ema12);
 
     state.chart1Loading = true;
   };
@@ -287,7 +284,18 @@ const StrategyPage = (props: BinemonPageProps) => {
     }
   }, [state.network, state.marketAddress]);
 
-  const movingAverage = (data, window) => {
+  function EMACalc(mArray, mRange) {
+    var k = 2 / (mRange + 1);
+    // first item is just the same as the first item in the input
+    const emaArray = [mArray[0]];
+    // for the rest of the items, they are computed with the previous one
+    for (var i = 1; i < mArray.length; i++) {
+      emaArray.push(mArray[i] * k + emaArray[i - 1] * (1 - k));
+    }
+    return emaArray;
+  }
+
+  const rolling = (data, window) => {
     const result = new Array(data.length).fill(null);
     for (let i = 0; i < data.length; i++) {
       if (i >= window - 1) {
@@ -483,7 +491,7 @@ const StrategyPage = (props: BinemonPageProps) => {
               {
                 x: state.datas.map((i) => i.Time),
                 y: bfill(
-                  movingAverage(
+                  rolling(
                     state.datas.map((i) => i.ytUnderlying),
                     state.config.ma1
                   )
@@ -495,7 +503,7 @@ const StrategyPage = (props: BinemonPageProps) => {
               {
                 x: state.datas.map((i) => i.Time),
                 y: bfill(
-                  movingAverage(
+                  rolling(
                     state.datas.map((i) => i.ytUnderlying),
                     state.config.ma2
                   )
@@ -508,7 +516,7 @@ const StrategyPage = (props: BinemonPageProps) => {
               {
                 x: state.datas.map((i) => i.Time),
                 y: bfill(
-                  movingAverage(
+                  rolling(
                     state.datas.map((i) => i.ytUnderlying),
                     state.config.ma3
                   )
