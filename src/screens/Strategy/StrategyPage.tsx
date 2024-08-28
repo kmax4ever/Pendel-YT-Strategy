@@ -45,8 +45,8 @@ const StrategyPage = (props: BinemonPageProps) => {
     isUseOptionalFrom1: false,
     isUseOptionalFrom2: false,
     // marketAddress: "0x00b321d89a8c36b3929f20b7955080baed706d1b",
-    marketAddress: "0xbbf399db59a845066aafce9ae55e68c505fa97b7",
-    ytAddress: "0x279e76fa6310976dc651c5f48ec7e768e9e2ccb4",
+    marketAddress: "0x038c1b03dab3b891afbca4371ec807edaa3e6eb6",
+    ytAddress: "0xd66b560f4e3e85f22c192d91da847886d5c5fd00",
     underlyingAmount: 1,
     pointPerHour: 0.04,
     pendelYTMultiplier: 5,
@@ -163,14 +163,8 @@ const StrategyPage = (props: BinemonPageProps) => {
         1;
 
       state.datas[i]["longYieldApy"] = longYieldApy;
-      // console.log("xxx longYieldApy", {
-      //   underlyingApy,
-      //   impliedApy,
-      //   hourToMaturity,
-      //   longYieldApy,
-      // });
+
       const ytUnderlying = (impliedApy + 1) ** (hourToMaturity / 8760) - 1;
-      //const ytUnderlying = impliedApy + 1 ** (hourToMaturity / 8760) - 1;
 
       state.datas[i]["ytUnderlying"] = ytUnderlying;
 
@@ -246,8 +240,6 @@ const StrategyPage = (props: BinemonPageProps) => {
 
     state.MACD = MACD;
     state.SignalLine = sinalLine;
-
-    console.log("ema12", ema12);
 
     state.chart1Loading = true;
   };
@@ -487,6 +479,9 @@ const StrategyPage = (props: BinemonPageProps) => {
                 mode: "lines",
                 name: "Volatility",
                 yaxis: "y5",
+                line: {
+                  color: "red",
+                },
               },
               {
                 x: state.datas.map((i) => i.Time),
@@ -511,6 +506,9 @@ const StrategyPage = (props: BinemonPageProps) => {
                 mode: "lines",
                 name: "50-day MA",
                 yaxis: "y3",
+                line: {
+                  color: "#a565f9",
+                },
               },
 
               {
@@ -532,6 +530,9 @@ const StrategyPage = (props: BinemonPageProps) => {
                 mode: "lines",
                 name: "MACD",
                 yaxis: "y4",
+                line: {
+                  color: "#2cd5fc",
+                },
               },
               {
                 x: state.datas.map((i) => i.Time),
