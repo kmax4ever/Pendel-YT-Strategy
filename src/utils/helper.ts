@@ -183,3 +183,7 @@ export const getErrorMessageFromServer = (err) => {
     "Something wrong, please try again later!"
   );
 };
+
+export const getSeconds = (date: any) => {
+  return new Date(date).getTime() / 1000 || 0;
+};

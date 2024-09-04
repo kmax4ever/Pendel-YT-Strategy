@@ -24,12 +24,14 @@ const _ = require("lodash");
 import { ConfirmModalInstance } from "App";
 
 import "react-datepicker/dist/react-datepicker.css";
+import { getSeconds } from "utils/helper";
 interface BinemonPageProps {}
 const CONFIG_NETWORK = {
   1: `Ethereum`,
   42161: "Arbitrum",
   5000: `Mantle`,
 };
+const BASE_TYPE = "YT";
 
 const CHART_SIZE = {
   width: 1700,
@@ -39,7 +41,7 @@ const CHART_SIZE = {
 const StrategyPage = (props: BinemonPageProps) => {
   const styles = useStyles(props);
   const { pendleStore } = useDepsContainer();
-  const BASE_TYPE = "YT";
+
   const state = useLocalStore(() => ({
     network: 1,
     isUseOptionalFrom1: false,
@@ -148,10 +150,10 @@ const StrategyPage = (props: BinemonPageProps) => {
       const volume = pendleStore.volume[i];
       const { timestamp, impliedApy, underlyingApy } = state.datas[i];
 
-      const timestampSeconds = new Date(timestamp).getTime() / 1000;
-      const maturityTimeSeconds = new Date(state.maturityTime).getTime() / 1000;
+      const timestampAtSecs = getSeconds(timestamp);
+      const maturityTimeAtSecs = getSeconds(state.maturityTime);
 
-      const hourToMaturity = (maturityTimeSeconds - timestampSeconds) / 3600;
+      const hourToMaturity = (maturityTimeAtSecs - timestampAtSecs) / 3600;
 
       state.datas[i][`Time`] = new Date(timestamp).toJSON();
 
@@ -187,27 +189,26 @@ const StrategyPage = (props: BinemonPageProps) => {
       state.weightedPointsPerUnderlying += weightedPoints;
     }
 
-    const maxTimestampOfDatas =
-      new Date(state.datas[state.datas.length - 1].timestamp).getTime() / 1000;
+    const endTimeOfApysAtSec = getSeconds(
+      state.datas[state.datas.length - 1].timestamp
+    );
 
-    const index = 3045 - state.datas.length;
-    const range = index * 3600;
-    const end = new Date((maxTimestampOfDatas + range) * 1000);
+    const range = 3045 - state.datas.length;
+    const secondsRange = range * 3600;
+    const endTimeAtSecs = new Date((endTimeOfApysAtSec + secondsRange) * 1000);
     const length = state.datas.length;
 
     for (let i = 0; i < 3045; i++) {
-      let timestamp = state.datas[i]
-        ? new Date(state.datas[i].timestamp).getTime() / 1000
-        : 0;
+      let timestamp = state.datas[i] ? getSeconds(state.datas[i].timestamp) : 0;
 
       if (!timestamp) {
-        const range = (i - length) * 3600;
-        timestamp = maxTimestampOfDatas + range;
+        const seconds = (i - length) * 3600;
+        timestamp = endTimeOfApysAtSec + seconds;
       }
 
-      const secondsRange = new Date(end).getTime() / 1000 - timestamp;
-
-      const hourRange = secondsRange / 3600;
+      //const secondsRange = new Date(endTimeAtSecs).getTime() / 1000 - timestamp;
+      // const hourRange = secondsRange / 3600;
+      const hourRange = (getSeconds(endTimeAtSecs) - timestamp) / 3600;
 
       const fairValueCurve =
         1 - 1 / (1 + state.impliedApyAvgSum) ** (hourRange / 8670);
@@ -278,9 +279,7 @@ const StrategyPage = (props: BinemonPageProps) => {
 
   function EMACalc(mArray, mRange) {
     var k = 2 / (mRange + 1);
-    // first item is just the same as the first item in the input
     const emaArray = [mArray[0]];
-    // for the rest of the items, they are computed with the previous one
     for (var i = 1; i < mArray.length; i++) {
       emaArray.push(mArray[i] * k + emaArray[i - 1] * (1 - k));
     }
